@@ -6,12 +6,12 @@ from telebot import types
 from flask import Flask
 from threading import Thread
 
-# --- SERVIDOR WEB ---
+# --- SERVIDOR WEB (PARA O RENDER NÃO DORMIR) ---
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot Academia V6 - Gerador Automático!"
+    return "Bot Academia V7 - Links Corrigidos!"
 
 def run():
     app.run(host='0.0.0.0', port=8080)
@@ -32,7 +32,7 @@ treinos_variacoes = {
     'A': [
         "🔥 **TREINO A - OPÇÃO 1 (Clássico)**\n\n1. Supino Reto (4x10)\n2. Supino Inclinado (3x12)\n3. Crucifixo (3x15)\n4. Tríceps Corda (4x12)\n5. Tríceps Testa (3x10)",
         "🔥 **TREINO A - OPÇÃO 2 (Halteres)**\n\n1. Supino Reto com Halteres (4x10)\n2. Crucifixo Inclinado (3x12)\n3. Flexão de Braço (3x Falha)\n4. Tríceps Francês (4x12)\n5. Tríceps Banco (3x15)",
-        "🔥 **TREINO A - OPÇÃO 3 (Máquinas/Foco)**\n\n1. Supino Máquina (4x12)\n2. Peck Deck (4x15)\n3. Cross Over (3x15)\n4. Tríceps Pulley Barra (4x15)\n5. Tríceps Coice (3x12)"
+        "🔥 **TREINO A - OPÇÃO 3 (Máquinas)**\n\n1. Supino Máquina (4x12)\n2. Peck Deck (4x15)\n3. Cross Over (3x15)\n4. Tríceps Pulley Barra (4x15)\n5. Tríceps Coice (3x12)"
     ],
     'B': [
         "🦍 **TREINO B - OPÇÃO 1 (Cargas)**\n\n1. Puxada Alta Aberta (4x10)\n2. Remada Curvada (4x8)\n3. Remada Serrote (3x10)\n4. Rosca Direta Barra (4x10)\n5. Rosca Martelo (3x12)",
@@ -46,12 +46,20 @@ treinos_variacoes = {
     ]
 }
 
-# Links GIFs
+# --- LINKS NOVOS (TENOR - MAIS ESTÁVEIS) ---
 gifs = {
-    'supino': 'https://i.imgur.com/X4Z8tCq.gif', 
-    'puxada': 'https://i.imgur.com/0w1PTx8.gif',
-    'agachamento': 'https://i.imgur.com/1Tq3Q5S.gif'
+    # Supino Reto
+    'supino': 'https://media.tenor.com/gGI0qJj_8mcAAAAC/bench-press-chest.gif', 
+    
+    # Puxada Alta
+    'puxada': 'https://media.tenor.com/NbC0ePqF4wEAAAAC/lat-pulldown-workout.gif',
+    
+    # Agachamento Livre
+    'agachamento': 'https://media.tenor.com/Post4Ww_HwUAAAAC/squat-exercise.gif'
 }
+
+# Memória Temporária
+user_custom_workout = {}
 
 # --- TIMER ---
 def contar_tempo(chat_id):
@@ -65,16 +73,17 @@ def main_menu(message):
     markup.add(
         types.KeyboardButton('🏋️ GERADOR DE TREINO'),
         types.KeyboardButton('⏱️ TIMER 60s'),
-        types.KeyboardButton('📝 NOTAS / DIÁRIO'),
+        types.KeyboardButton('📝 ESCREVER MEU TREINO'),
         types.KeyboardButton('⚙️ EXTRAS')
     )
-    bot.send_message(message.chat.id, "Fala David! Bora gerar um treino novo hoje?", reply_markup=markup)
+    bot.send_message(message.chat.id, "Fala David! Bora treinar?", reply_markup=markup)
 
 # --- RESPOSTAS ---
 @bot.message_handler(func=lambda message: True)
 def bot_message(message):
     text = message.text
     chat_id = message.chat.id
+    user_id = message.from_user.id
 
     # === GERADOR DE TREINOS ===
     if text == '🏋️ GERADOR DE TREINO':
@@ -96,11 +105,30 @@ def bot_message(message):
         bot.send_message(chat_id, "⏳ Contando 60s...")
         Thread(target=contar_tempo, args=(chat_id,)).start()
 
-    elif text == '📝 NOTAS / DIÁRIO':
-        bot.send_message(chat_id, "Escreva sua nota (Ex: Carga supino 40kg) que eu salvo aqui (Simulação).")
+    elif text == '📝 ESCREVER MEU TREINO':
+        msg = bot.send_message(chat_id, "Digita aí: Qual o treino de hoje? (Ex: Correr 20min e 100 flexões)")
+        bot.register_next_step_handler(msg, salvar_treino_custom)
+
+    elif text == '⚙️ EXTRAS':
+        m = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
+        m.add('📋 Ver Meu Treino', '🎶 Playlist', '🔙 Voltar')
+        bot.send_message(chat_id, "Extras:", reply_markup=m)
+    
+    elif text == '📋 Ver Meu Treino':
+        treino = user_custom_workout.get(user_id, "Nenhum treino salvo hoje!")
+        bot.send_message(chat_id, f"📝 **Seu Treino:**\n{treino}", parse_mode="Markdown")
+
+    elif text == '🎶 Playlist':
+        bot.send_message(chat_id, "🎧 Playlist Focada: https://open.spotify.com/playlist/37i9dQZF1DX70RN3TfWWJh")
 
     elif text == '🔙 Voltar':
         main_menu(message)
+
+# --- FUNÇÃO PARA SALVAR O TREINO CUSTOMIZADO ---
+def salvar_treino_custom(message):
+    user_id = message.from_user.id
+    user_custom_workout[user_id] = message.text
+    bot.reply_to(message, "✅ Salvo! Vá em ⚙️ EXTRAS para ver.")
 
 # --- FUNÇÃO AUXILIAR PARA ENVIAR O TREINO COM BOTÃO DE TROCAR ---
 def enviar_treino(chat_id, tipo):
@@ -108,7 +136,7 @@ def enviar_treino(chat_id, tipo):
     treino_texto = treinos_variacoes[tipo][0]
     
     markup = types.InlineKeyboardMarkup()
-    # Botão de GIF
+    # Botão de GIF (Agora com links novos)
     if tipo == 'A':
         markup.add(types.InlineKeyboardButton("🎥 Ver GIF Supino", callback_data="supino"))
     elif tipo == 'B':
@@ -124,18 +152,21 @@ def enviar_treino(chat_id, tipo):
 # --- CALLBACKS (GIFS E TROCA DE TREINO) ---
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
-    # Se for pedido de GIF
+    # 1. Se for pedido de GIF
     if call.data in gifs:
-        bot.answer_callback_query(call.id)
-        bot.send_animation(call.message.chat.id, gifs[call.data])
+        bot.answer_callback_query(call.id, "Carregando...")
+        try:
+            bot.send_animation(call.message.chat.id, gifs[call.data])
+        except Exception as e:
+            # Se falhar, manda o link escrito
+            bot.send_message(call.message.chat.id, f"📹 Assista aqui: {gifs[call.data]}")
         return
 
-    # Se for pedido de TROCAR TREINO (Logica do Random)
+    # 2. Se for pedido de TROCAR TREINO
     if call.data.startswith("trocar_"):
         tipo = call.data.split("_")[1] # Pega 'A', 'B' ou 'C'
         novo_treino = random.choice(treinos_variacoes[tipo])
         
-        # Monta os botões de novo
         markup = types.InlineKeyboardMarkup()
         if tipo == 'A': markup.add(types.InlineKeyboardButton("🎥 Ver GIF Supino", callback_data="supino"))
         elif tipo == 'B': markup.add(types.InlineKeyboardButton("🎥 Ver GIF Puxada", callback_data="puxada"))
@@ -143,10 +174,9 @@ def callback_query(call):
         
         markup.add(types.InlineKeyboardButton(f"🔄 Gerar Outro Treino {tipo}", callback_data=f"trocar_{tipo}"))
 
-        # Edita a mensagem na hora!
         try:
             bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=novo_treino, reply_markup=markup, parse_mode="Markdown")
-            bot.answer_callback_query(call.id, "Treino atualizado! 🔄")
+            bot.answer_callback_query(call.id, "Treino atualizado!")
         except:
             bot.answer_callback_query(call.id, "Já é esse treino!")
 

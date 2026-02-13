@@ -13,7 +13,7 @@ app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot V14 - TODAS AS FUNÇÕES + IA!"
+    return "Bot V15 - TUDO FUNCIONANDO!"
 
 def run():
     app.run(host='0.0.0.0', port=8080)
@@ -35,21 +35,21 @@ else:
     model = None
 
 # ==========================================
-# 🧠 BANCO DE DADOS E CONTEÚDO
+# 🧠 BANCO DE DADOS CORRIGIDO
 # ==========================================
-user_db = {} # Guarda XP, Streak, Histórico
+user_db = {} 
 
-# TREINOS ACADEMIA
+# TREINOS ACADEMIA (AGORA OS NOMES BATEM COM OS BOTÕES)
 treinos_gym = {
-    'A': "🔥 **TREINO A (Peito/Tríceps)**\n\n1. [Supino Reto](https://www.youtube.com/results?search_query=execucao+supino+reto) (4x10)\n2. [Supino Inclinado](https://www.youtube.com/results?search_query=execucao+supino+inclinado) (3x12)\n3. [Crucifixo](https://www.youtube.com/results?search_query=execucao+crucifixo+maquina) (3x15)\n4. [Tríceps Corda](https://www.youtube.com/results?search_query=execucao+triceps+corda) (4x12)",
-    'B': "🦍 **TREINO B (Costas/Bíceps)**\n\n1. [Puxada Alta](https://www.youtube.com/results?search_query=execucao+puxada+alta) (4x10)\n2. [Remada Curvada](https://www.youtube.com/results?search_query=execucao+remada+curvada) (4x8)\n3. [Rosca Direta](https://www.youtube.com/results?search_query=execucao+rosca+direta) (4x10)\n4. [Rosca Martelo](https://www.youtube.com/results?search_query=execucao+rosca+martelo) (3x12)",
-    'C': "🍗 **TREINO C (Pernas)**\n\n1. [Agachamento](https://www.youtube.com/results?search_query=execucao+agachamento) (4x10)\n2. [Leg Press](https://www.youtube.com/results?search_query=execucao+leg+press) (4x12)\n3. [Extensora](https://www.youtube.com/results?search_query=execucao+cadeira+extensora) (3x15)\n4. [Stiff](https://www.youtube.com/results?search_query=execucao+stiff) (4x12)"
+    'Treino A': "🔥 **TREINO A (Peito/Tríceps)**\n\n1. [Supino Reto](https://www.youtube.com/results?search_query=execucao+supino+reto) (4x10)\n2. [Supino Inclinado](https://www.youtube.com/results?search_query=execucao+supino+inclinado) (3x12)\n3. [Crucifixo](https://www.youtube.com/results?search_query=execucao+crucifixo+maquina) (3x15)\n4. [Tríceps Corda](https://www.youtube.com/results?search_query=execucao+triceps+corda) (4x12)",
+    'Treino B': "🦍 **TREINO B (Costas/Bíceps)**\n\n1. [Puxada Alta](https://www.youtube.com/results?search_query=execucao+puxada+alta) (4x10)\n2. [Remada Curvada](https://www.youtube.com/results?search_query=execucao+remada+curvada) (4x8)\n3. [Rosca Direta](https://www.youtube.com/results?search_query=execucao+rosca+direta) (4x10)\n4. [Rosca Martelo](https://www.youtube.com/results?search_query=execucao+rosca+martelo) (3x12)",
+    'Treino C': "🍗 **TREINO C (Pernas)**\n\n1. [Agachamento](https://www.youtube.com/results?search_query=execucao+agachamento) (4x10)\n2. [Leg Press](https://www.youtube.com/results?search_query=execucao+leg+press) (4x12)\n3. [Extensora](https://www.youtube.com/results?search_query=execucao+cadeira+extensora) (3x15)\n4. [Stiff](https://www.youtube.com/results?search_query=execucao+stiff) (4x12)"
 }
 
-# TREINOS EM CASA
+# TREINOS EM CASA (AGORA OS NOMES BATEM COM OS BOTÕES)
 treinos_casa = {
-    'FullBody': "🏠 **TREINO EM CASA**\n\n1. [Polichinelos](https://www.youtube.com/results?search_query=polichinelos) (3x50)\n2. [Flexão](https://www.youtube.com/results?search_query=flexao+de+braco) (4xFalha)\n3. [Agachamento](https://www.youtube.com/results?search_query=agachamento+livre) (4x20)\n4. [Abdominal](https://www.youtube.com/results?search_query=abdominal+remador) (3x20)",
-    'HIIT': "🔥 **CARDIO EM CASA**\n\n1. [Burpees](https://www.youtube.com/results?search_query=burpees) (3x10)\n2. [Corrida no Lugar](https://www.youtube.com/results?search_query=corrida+estacionaria) (3x1min)\n3. [Mountain Climber](https://www.youtube.com/results?search_query=mountain+climber) (3x30s)"
+    '🏠 FullBody Casa': "🏠 **TREINO EM CASA (Corpo Todo)**\n\n1. [Polichinelos](https://www.youtube.com/results?search_query=polichinelos) (3x50)\n2. [Flexão](https://www.youtube.com/results?search_query=flexao+de+braco) (4xFalha)\n3. [Agachamento](https://www.youtube.com/results?search_query=agachamento+livre) (4x20)\n4. [Abdominal](https://www.youtube.com/results?search_query=abdominal+remador) (3x20)",
+    '🏠 HIIT Casa': "🔥 **HIIT EM CASA (Queima Gordura)**\n\n1. [Burpees](https://www.youtube.com/results?search_query=burpees) (3x10)\n2. [Corrida no Lugar](https://www.youtube.com/results?search_query=corrida+estacionaria) (3x1min)\n3. [Mountain Climber](https://www.youtube.com/results?search_query=mountain+climber) (3x30s)\n4. [Agachamento com Salto](https://www.youtube.com/results?search_query=agachamento+com+salto) (3x15)"
 }
 
 # EXTRAS
@@ -73,7 +73,7 @@ def main_menu(message):
         types.KeyboardButton('🛠️ FERRAMENTAS'),
         types.KeyboardButton('🎮 PERFIL & EXTRAS')
     )
-    bot.send_message(message.chat.id, "🔥 **SISTEMA V14 - COMPLETO** 🔥\nTodas as funções ativas. Escolha:", reply_markup=markup)
+    bot.send_message(message.chat.id, "🔥 **SISTEMA V15 - CORRIGIDO** 🔥\nEscolha sua missão:", reply_markup=markup)
 
 @bot.message_handler(func=lambda message: True)
 def bot_message(message):

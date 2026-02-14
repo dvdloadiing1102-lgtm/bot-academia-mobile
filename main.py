@@ -13,7 +13,7 @@ app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot V16 - GOD MODE + IA CORRIGIDA!"
+    return "Bot V17 - IA CLÁSSICA BLINDADA!"
 
 def run():
     app.run(host='0.0.0.0', port=8080)
@@ -30,24 +30,24 @@ bot = telebot.TeleBot(TOKEN)
 GEMINI_KEY = os.getenv('GEMINI_KEY')
 if GEMINI_KEY:
     genai.configure(api_key=GEMINI_KEY)
-    # Usando a versão 'latest' para evitar o erro 404
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    # Usando o modelo clássico de visão (À prova de falhas no Render)
+    model = genai.GenerativeModel('gemini-pro-vision')
 else:
     model = None
 
 # ==========================================
 # 🧠 BANCO DE DADOS E CONTEÚDO
 # ==========================================
-user_db = {} # Guarda XP, Streak, Histórico
+user_db = {} 
 
-# TREINOS ACADEMIA (NOMES IDÊNTICOS AOS BOTÕES)
+# TREINOS ACADEMIA
 treinos_gym = {
     'Treino A': "🔥 **TREINO A (Peito/Tríceps)**\n\n1. [Supino Reto](https://www.youtube.com/results?search_query=execucao+supino+reto) (4x10)\n2. [Supino Inclinado](https://www.youtube.com/results?search_query=execucao+supino+inclinado) (3x12)\n3. [Crucifixo](https://www.youtube.com/results?search_query=execucao+crucifixo+maquina) (3x15)\n4. [Tríceps Corda](https://www.youtube.com/results?search_query=execucao+triceps+corda) (4x12)",
     'Treino B': "🦍 **TREINO B (Costas/Bíceps)**\n\n1. [Puxada Alta](https://www.youtube.com/results?search_query=execucao+puxada+alta) (4x10)\n2. [Remada Curvada](https://www.youtube.com/results?search_query=execucao+remada+curvada) (4x8)\n3. [Rosca Direta](https://www.youtube.com/results?search_query=execucao+rosca+direta) (4x10)\n4. [Rosca Martelo](https://www.youtube.com/results?search_query=execucao+rosca+martelo) (3x12)",
     'Treino C': "🍗 **TREINO C (Pernas)**\n\n1. [Agachamento](https://www.youtube.com/results?search_query=execucao+agachamento) (4x10)\n2. [Leg Press](https://www.youtube.com/results?search_query=execucao+leg+press) (4x12)\n3. [Extensora](https://www.youtube.com/results?search_query=execucao+cadeira+extensora) (3x15)\n4. [Stiff](https://www.youtube.com/results?search_query=execucao+stiff) (4x12)"
 }
 
-# TREINOS EM CASA (NOMES IDÊNTICOS AOS BOTÕES)
+# TREINOS EM CASA
 treinos_casa = {
     '🏠 FullBody Casa': "🏠 **TREINO EM CASA (Corpo Todo)**\n\n1. [Polichinelos](https://www.youtube.com/results?search_query=polichinelos) (3x50)\n2. [Flexão](https://www.youtube.com/results?search_query=flexao+de+braco) (4xFalha)\n3. [Agachamento](https://www.youtube.com/results?search_query=agachamento+livre) (4x20)\n4. [Abdominal](https://www.youtube.com/results?search_query=abdominal+remador) (3x20)\n5. [Prancha](https://www.youtube.com/results?search_query=prancha+abdominal) (3x 1min)",
     '🏠 HIIT Casa': "🔥 **HIIT EM CASA (Queima Gordura)**\n\n1. [Burpees](https://www.youtube.com/results?search_query=burpees) (3x10)\n2. [Corrida no Lugar](https://www.youtube.com/results?search_query=corrida+estacionaria) (3x1min)\n3. [Mountain Climber](https://www.youtube.com/results?search_query=mountain+climber) (3x30s)\n4. [Agachamento com Salto](https://www.youtube.com/results?search_query=agachamento+com+salto) (3x15)"
@@ -74,7 +74,7 @@ def main_menu(message):
         types.KeyboardButton('🛠️ FERRAMENTAS'),
         types.KeyboardButton('🎮 PERFIL & EXTRAS')
     )
-    bot.send_message(message.chat.id, "🔥 **SISTEMA V16 - COMPLETO** 🔥\nTodas as funções ativas. Escolha:", reply_markup=markup)
+    bot.send_message(message.chat.id, "🔥 **SISTEMA V17 - IA CLÁSSICA** 🔥\nEscolha sua missão:", reply_markup=markup)
 
 @bot.message_handler(func=lambda message: True)
 def bot_message(message):
@@ -116,15 +116,15 @@ def bot_message(message):
 
     elif text == '💧 Meta Água':
         msg = bot.send_message(chat_id, "Qual o seu peso (kg)?")
-        bot.register_next_step_handler(msg, lambda m: bot.reply_to(m, f"💧 Sua meta diária é de **{float(m.text)*0.035:.2f} Litros** de água."))
+        bot.register_next_step_handler(msg, lambda m: bot.reply_to(m, f"💧 Sua meta diária é de **{float(m.text.replace(',','.'))*0.035:.2f} Litros** de água."))
 
     elif text == '💊 Creatina':
         msg = bot.send_message(chat_id, "Qual o seu peso (kg)?")
-        bot.register_next_step_handler(msg, lambda m: bot.reply_to(m, f"💊 A dose ideal para você é de **{float(m.text)*0.07:.1f}g** de creatina por dia."))
+        bot.register_next_step_handler(msg, lambda m: bot.reply_to(m, f"💊 A dose ideal para você é de **{float(m.text.replace(',','.'))*0.07:.1f}g** de creatina por dia."))
     
     elif text == '🥩 Proteína':
         msg = bot.send_message(chat_id, "Qual o seu peso (kg)?")
-        bot.register_next_step_handler(msg, lambda m: bot.reply_to(m, f"🥩 Para hipertrofia, consuma em média: **{float(m.text)*2.0:.0f}g** de proteína por dia."))
+        bot.register_next_step_handler(msg, lambda m: bot.reply_to(m, f"🥩 Para hipertrofia, consuma em média: **{float(m.text.replace(',','.'))*2.0:.0f}g** de proteína por dia."))
 
     elif text == '🍳 Pré-Treino':
         bot.send_message(chat_id, f"🎲 Sugestão do Chef maromba: **{random.choice(pre_treinos)}**")
@@ -205,7 +205,7 @@ def handle_photo(message):
         with open(temp_img, 'wb') as new_file:
             new_file.write(downloaded_file)
         
-        # Prepara a imagem e envia pro Gemini
+        # Prepara a imagem e envia pro Gemini (Pro-Vision usa esse formato)
         img = Image.open(temp_img)
         prompt = "Analise esta foto de refeição. Diga os alimentos que você consegue identificar, faça uma estimativa das calorias totais e dos macronutrientes (Proteína, Carboidrato e Gordura). Responda em Português do Brasil de forma direta e amigável."
         response = model.generate_content([prompt, img])
@@ -220,7 +220,7 @@ def handle_photo(message):
 # ==========================================
 def calc_anilhas(message):
     try:
-        total = float(message.text)
+        total = float(message.text.replace(',', '.'))
         lado = (total - 20) / 2 # Subtrai os 20kg da barra olímpica
         if lado <= 0:
             bot.reply_to(message, "A barra vazia já pesa 20kg!")
@@ -231,7 +231,7 @@ def calc_anilhas(message):
 
 def calc_1rm(message):
     try:
-        peso, reps = map(int, message.text.split())
+        peso, reps = map(float, message.text.replace(',', '.').split())
         rm = peso * (1 + (reps/30))
         bot.reply_to(message, f"💪 **Força Máxima (1RM):** Você consegue pegar até **{rm:.1f}kg** para uma única repetição.")
     except: 

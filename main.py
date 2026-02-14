@@ -13,7 +13,7 @@ app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot V19 - O MEGAZORD COM IA CORRIGIDA!"
+    return "Bot V20 - MEGAZORD BLINDADO (CANIVETE SUÍÇO DA IA)!"
 
 def run():
     app.run(host='0.0.0.0', port=8080)
@@ -64,7 +64,7 @@ def main_menu(message):
         types.KeyboardButton('🛠️ FERRAMENTAS'),
         types.KeyboardButton('🎮 PERFIL & EXTRAS')
     )
-    bot.send_message(message.chat.id, "🔥 **SISTEMA V19 - MEGAZORD ATIVO** 🔥\nEscolha sua missão:", reply_markup=markup)
+    bot.send_message(message.chat.id, "🔥 **SISTEMA V20 - IA BLINDADA** 🔥\nEscolha sua missão:", reply_markup=markup)
 
 @bot.message_handler(func=lambda message: True)
 def bot_message(message):
@@ -99,7 +99,7 @@ def bot_message(message):
         bot.send_message(chat_id, "Nutrição Inteligente:", reply_markup=m)
 
     elif text == '📷 Analisar Prato (IA)':
-        bot.send_message(chat_id, "🍽️ **Envie uma FOTO da sua comida agora!**\nA Inteligência Artificial vai analisar os alimentos para você.")
+        bot.send_message(chat_id, "🍽️ **Envie uma FOTO da sua comida agora!**\nA Inteligência Artificial vai identificar os alimentos.")
 
     elif text == '💧 Meta Água':
         msg = bot.send_message(chat_id, "Qual o seu peso (kg)?")
@@ -173,7 +173,7 @@ def bot_message(message):
         main_menu(message)
 
 # ==========================================
-# 📸 A MÁGICA DIRETA (API GEMINI CORRIGIDA)
+# 📸 A MÁGICA DA IA (O CANIVETE SUÍÇO)
 # ==========================================
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
@@ -182,42 +182,60 @@ def handle_photo(message):
         bot.reply_to(message, "⚠️ Chave GEMINI_KEY não encontrada no Render.")
         return
     
-    bot.reply_to(message, "🤖 **Lendo a imagem com a IA do Google...**")
+    bot.reply_to(message, "🤖 **Hackeando os servidores do Google para achar o modelo certo...**")
     try:
         # 1. Baixa a foto do Telegram
         file_info = bot.get_file(message.photo[-1].file_id)
         downloaded_file = bot.download_file(file_info.file_path)
-        
-        # 2. Converte a foto para Base64
         img_b64 = base64.b64encode(downloaded_file).decode('utf-8')
         
-        # 3. Monta o pacote EXATAMENTE como o Google exige (inlineData e mimeType sem underline)
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+        # 2. Monta o pacote EXATAMENTE como o Google exige
         payload = {
             "contents": [{
                 "parts": [
-                    {"text": "Analise esta foto de refeição. Diga os alimentos que você consegue identificar, faça uma estimativa das calorias totais e dos macronutrientes (Proteína, Carboidrato e Gordura). Responda em Português do Brasil de forma amigável."},
+                    {"text": "Analise esta foto de refeição. Diga os alimentos que você consegue identificar, faça uma estimativa das calorias totais e dos macronutrientes (Proteína, Carboidrato e Gordura). Responda em Português de forma amigável."},
                     {"inlineData": {"mimeType": "image/jpeg", "data": img_b64}}
                 ]
             }]
         }
         headers = {'Content-Type': 'application/json'}
         
-        # 4. Dispara a requisição
-        response = requests.post(url, json=payload, headers=headers)
+        # 3. A LISTA DE TODOS OS MODELOS DO GOOGLE (Tática de Força Bruta)
+        modelos_para_testar = [
+            "gemini-1.5-flash-latest",
+            "gemini-1.5-flash",
+            "gemini-1.5-pro-latest",
+            "gemini-1.0-pro-vision-latest",
+            "gemini-pro-vision"
+        ]
         
-        # 5. Lê a resposta
-        if response.status_code == 200:
-            dados = response.json()
-            texto_ia = dados['candidates'][0]['content']['parts'][0]['text']
-            bot.reply_to(message, f"🍽️ **ANÁLISE NUTRICIONAL:**\n\n{texto_ia}", parse_mode="Markdown")
+        sucesso = False
+        erro_final = ""
+        modelo_sucesso = ""
+        texto_ia = ""
+        
+        # 4. O bot atira em todos os modelos. O que responder primeiro, ele usa!
+        for modelo in modelos_para_testar:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent?key={GEMINI_KEY}"
+            response = requests.post(url, json=payload, headers=headers)
+            
+            if response.status_code == 200:
+                dados = response.json()
+                texto_ia = dados['candidates'][0]['content']['parts'][0]['text']
+                modelo_sucesso = modelo
+                sucesso = True
+                break # Achou o modelo certo! Sai do loop.
+            else:
+                erro_final = response.json().get('error', {}).get('message', 'Erro desconhecido')
+
+        # 5. Entrega a resposta
+        if sucesso:
+            bot.reply_to(message, f"🍽️ **ANÁLISE NUTRICIONAL:**\n\n{texto_ia}\n\n_(✅ Funcionou no modelo: {modelo_sucesso})_", parse_mode="Markdown")
         else:
-            # Se der erro, ele conta exatamente o que houve
-            erro_real = response.json().get('error', {}).get('message', 'Erro desconhecido')
-            bot.reply_to(message, f"❌ O Google recusou. Motivo exato: {erro_real}")
+            bot.reply_to(message, f"❌ O Google bloqueou todas as 5 tentativas. Último erro reportado: {erro_final}")
             
     except Exception as e:
-        bot.reply_to(message, f"❌ Erro interno: {e}")
+        bot.reply_to(message, f"❌ Erro interno fatal: {e}")
 
 # ==========================================
 # 📐 CÁLCULOS

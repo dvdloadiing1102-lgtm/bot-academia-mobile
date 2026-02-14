@@ -13,7 +13,7 @@ app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot V20 - MEGAZORD BLINDADO (CANIVETE SUÍÇO DA IA)!"
+    return "Bot V21 - SCANNER AUTOMÁTICO DE IA ATIVADO!"
 
 def run():
     app.run(host='0.0.0.0', port=8080)
@@ -49,7 +49,7 @@ niveis = {0: "🐔 Frango", 100: "🏃 Em Obras", 300: "💪 Atlético", 600: "�
 desafios = ["20 Flexões AGORA!", "1min de Prancha!", "50 Polichinelos!", "Ficar agachado na parede 1min!"]
 
 # ==========================================
-# 🤖 MENUS
+# 🤖 MENUS (MANTIDOS 100%)
 # ==========================================
 
 @bot.message_handler(commands=['start', 'menu'])
@@ -64,7 +64,7 @@ def main_menu(message):
         types.KeyboardButton('🛠️ FERRAMENTAS'),
         types.KeyboardButton('🎮 PERFIL & EXTRAS')
     )
-    bot.send_message(message.chat.id, "🔥 **SISTEMA V20 - IA BLINDADA** 🔥\nEscolha sua missão:", reply_markup=markup)
+    bot.send_message(message.chat.id, "🔥 **SISTEMA V21 - AUTO-SCANNER** 🔥\nEscolha sua missão:", reply_markup=markup)
 
 @bot.message_handler(func=lambda message: True)
 def bot_message(message):
@@ -99,7 +99,7 @@ def bot_message(message):
         bot.send_message(chat_id, "Nutrição Inteligente:", reply_markup=m)
 
     elif text == '📷 Analisar Prato (IA)':
-        bot.send_message(chat_id, "🍽️ **Envie uma FOTO da sua comida agora!**\nA Inteligência Artificial vai identificar os alimentos.")
+        bot.send_message(chat_id, "🍽️ **Envie uma FOTO da sua comida agora!**\nVou scanear os servidores do Google para te dar o resultado.")
 
     elif text == '💧 Meta Água':
         msg = bot.send_message(chat_id, "Qual o seu peso (kg)?")
@@ -173,7 +173,7 @@ def bot_message(message):
         main_menu(message)
 
 # ==========================================
-# 📸 A MÁGICA DA IA (O CANIVETE SUÍÇO)
+# 📸 A MÁGICA DA IA (O SCANNER AUTOMÁTICO)
 # ==========================================
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
@@ -182,57 +182,69 @@ def handle_photo(message):
         bot.reply_to(message, "⚠️ Chave GEMINI_KEY não encontrada no Render.")
         return
     
-    bot.reply_to(message, "🤖 **Hackeando os servidores do Google para achar o modelo certo...**")
+    bot.reply_to(message, "🤖 **Iniciando protocolo Scanner. Buscando qual IA está liberada na sua chave...**")
     try:
-        # 1. Baixa a foto do Telegram
+        # 1. Pede para o Google a lista dos modelos que você tem acesso
+        url_lista = f"https://generativelanguage.googleapis.com/v1beta/models?key={GEMINI_KEY}"
+        req_lista = requests.get(url_lista)
+        
+        if req_lista.status_code != 200:
+            bot.reply_to(message, f"❌ A chave parece inválida. Erro ao listar modelos: {req_lista.json()}")
+            return
+            
+        # 2. Filtra os modelos úteis e que aceitam foto
+        modelos_disponiveis = req_lista.json().get('models', [])
+        modelos_validos = []
+        for m in modelos_disponiveis:
+            nome = m['name'].replace('models/', '')
+            # Pega modelos "flash" ou "vision" que a sua conta tem direito
+            if 'generateContent' in m.get('supportedGenerationMethods', []) and ('flash' in nome or 'vision' in nome or 'pro' in nome):
+                modelos_validos.append(nome)
+                
+        if not modelos_validos:
+            bot.reply_to(message, "❌ O Google disse que sua chave não tem acesso a nenhum modelo de geração.")
+            return
+
+        bot.send_message(message.chat.id, f"🔎 O Google listou {len(modelos_validos)} modelos na sua conta. Vou testar até um aceitar a foto!")
+
+        # 3. Baixa e converte a foto
         file_info = bot.get_file(message.photo[-1].file_id)
         downloaded_file = bot.download_file(file_info.file_path)
         img_b64 = base64.b64encode(downloaded_file).decode('utf-8')
         
-        # 2. Monta o pacote EXATAMENTE como o Google exige
+        # 4. O pacote da foto
         payload = {
             "contents": [{
                 "parts": [
-                    {"text": "Analise esta foto de refeição. Diga os alimentos que você consegue identificar, faça uma estimativa das calorias totais e dos macronutrientes (Proteína, Carboidrato e Gordura). Responda em Português de forma amigável."},
+                    {"text": "Analise esta foto de refeição. Diga os alimentos que você consegue identificar, faça uma estimativa das calorias totais e dos macronutrientes (Proteína, Carboidrato e Gordura). Responda em Português de forma direta e amigável."},
                     {"inlineData": {"mimeType": "image/jpeg", "data": img_b64}}
                 ]
             }]
         }
         headers = {'Content-Type': 'application/json'}
         
-        # 3. A LISTA DE TODOS OS MODELOS DO GOOGLE (Tática de Força Bruta)
-        modelos_para_testar = [
-            "gemini-1.5-flash-latest",
-            "gemini-1.5-flash",
-            "gemini-1.5-pro-latest",
-            "gemini-1.0-pro-vision-latest",
-            "gemini-pro-vision"
-        ]
-        
+        # 5. Atira a foto contra os modelos liberados. O primeiro que responder a gente usa.
         sucesso = False
         erro_final = ""
-        modelo_sucesso = ""
-        texto_ia = ""
+        modelo_usado = ""
         
-        # 4. O bot atira em todos os modelos. O que responder primeiro, ele usa!
-        for modelo in modelos_para_testar:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent?key={GEMINI_KEY}"
-            response = requests.post(url, json=payload, headers=headers)
+        for modelo in modelos_validos:
+            url_post = f"https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent?key={GEMINI_KEY}"
+            response = requests.post(url_post, json=payload, headers=headers)
             
             if response.status_code == 200:
                 dados = response.json()
                 texto_ia = dados['candidates'][0]['content']['parts'][0]['text']
-                modelo_sucesso = modelo
                 sucesso = True
-                break # Achou o modelo certo! Sai do loop.
+                modelo_usado = modelo
+                bot.reply_to(message, f"🍽️ **ANÁLISE NUTRICIONAL:**\n\n{texto_ia}\n\n_(✅ Sucesso! A IA que leu a foto foi: {modelo_usado})_", parse_mode="Markdown")
+                break # Funcionou! Sai da busca.
             else:
-                erro_final = response.json().get('error', {}).get('message', 'Erro desconhecido')
+                erro_final = response.json().get('error', {}).get('message', 'Erro')
 
-        # 5. Entrega a resposta
-        if sucesso:
-            bot.reply_to(message, f"🍽️ **ANÁLISE NUTRICIONAL:**\n\n{texto_ia}\n\n_(✅ Funcionou no modelo: {modelo_sucesso})_", parse_mode="Markdown")
-        else:
-            bot.reply_to(message, f"❌ O Google bloqueou todas as 5 tentativas. Último erro reportado: {erro_final}")
+        # Se testou todos da lista dele e deu erro:
+        if not sucesso:
+            bot.reply_to(message, f"❌ Nenhum modelo da sua chave quis analisar a foto. Último erro: {erro_final}")
             
     except Exception as e:
         bot.reply_to(message, f"❌ Erro interno fatal: {e}")

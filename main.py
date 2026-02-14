@@ -2,18 +2,18 @@ import os
 import telebot
 import time
 import random
-import google.generativeai as genai
+import requests
+import base64
 from telebot import types
 from flask import Flask
 from threading import Thread
-from PIL import Image
 
 # --- SERVIDOR WEB (KEEP ALIVE) ---
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot V17 - IA CLÁSSICA BLINDADA!"
+    return "Bot V18 - IA COM CONEXÃO DIRETA (ANTI-ERRO)!"
 
 def run():
     app.run(host='0.0.0.0', port=8080)
@@ -25,15 +25,6 @@ def keep_alive():
 # --- CONFIGURAÇÃO BOT ---
 TOKEN = os.getenv('BOT_TOKEN')
 bot = telebot.TeleBot(TOKEN)
-
-# --- CONFIGURAÇÃO DA IA (GEMINI) ---
-GEMINI_KEY = os.getenv('GEMINI_KEY')
-if GEMINI_KEY:
-    genai.configure(api_key=GEMINI_KEY)
-    # Usando o modelo clássico de visão (À prova de falhas no Render)
-    model = genai.GenerativeModel('gemini-pro-vision')
-else:
-    model = None
 
 # ==========================================
 # 🧠 BANCO DE DADOS E CONTEÚDO
@@ -53,13 +44,12 @@ treinos_casa = {
     '🏠 HIIT Casa': "🔥 **HIIT EM CASA (Queima Gordura)**\n\n1. [Burpees](https://www.youtube.com/results?search_query=burpees) (3x10)\n2. [Corrida no Lugar](https://www.youtube.com/results?search_query=corrida+estacionaria) (3x1min)\n3. [Mountain Climber](https://www.youtube.com/results?search_query=mountain+climber) (3x30s)\n4. [Agachamento com Salto](https://www.youtube.com/results?search_query=agachamento+com+salto) (3x15)"
 }
 
-# EXTRAS
 pre_treinos = ["🍌 Banana + Aveia e Mel", "☕ Café Preto + 3g Creatina", "🥪 Pão com Ovo Mexido", "🥣 Iogurte + Granola e Whey"]
 niveis = {0: "🐔 Frango", 100: "🏃 Em Obras", 300: "💪 Atlético", 600: "🦍 Monstro", 1000: "👑 Mr. Olympia"}
-desafios = ["20 Flexões AGORA!", "1min de Prancha!", "50 Polichinelos!", "Ficar agachado na parede 1min!", "Beba 500ml de água num gole só!"]
+desafios = ["20 Flexões AGORA!", "1min de Prancha!", "50 Polichinelos!", "Ficar agachado na parede 1min!"]
 
 # ==========================================
-# 🤖 MENUS
+# 🤖 MENUS (MANTIDOS 100%)
 # ==========================================
 
 @bot.message_handler(commands=['start', 'menu'])
@@ -74,7 +64,7 @@ def main_menu(message):
         types.KeyboardButton('🛠️ FERRAMENTAS'),
         types.KeyboardButton('🎮 PERFIL & EXTRAS')
     )
-    bot.send_message(message.chat.id, "🔥 **SISTEMA V17 - IA CLÁSSICA** 🔥\nEscolha sua missão:", reply_markup=markup)
+    bot.send_message(message.chat.id, "🔥 **SISTEMA V18 - IA DIRETA** 🔥\nEscolha sua missão:", reply_markup=markup)
 
 @bot.message_handler(func=lambda message: True)
 def bot_message(message):
@@ -97,7 +87,7 @@ def bot_message(message):
         bot.send_message(chat_id, f"🆙 **+15 XP!** (Guerreiro!)\n\n{treinos_casa[text]}", parse_mode="Markdown", disable_web_page_preview=True)
 
     elif text == '🧘 Mobilidade':
-        bot.send_message(chat_id, "🧘 **Mobilidade Rápida:**\n[Alongamento Completo 5min](https://www.youtube.com/results?search_query=alongamento+antes+treino+5+minutos)", parse_mode="Markdown", disable_web_page_preview=True)
+        bot.send_message(chat_id, "🧘 **Mobilidade Rápida:**\n[Alongamento 5min](https://www.youtube.com/results?search_query=alongamento+antes+treino)", parse_mode="Markdown", disable_web_page_preview=True)
 
     elif text == '🔄 Máquina Ocupada':
         bot.send_message(chat_id, "🚫 **Alternativas:**\nSupino ➡️ Flexão ou Halteres\nPuxada ➡️ Graviton ou Remada Livre\nLeg Press ➡️ Agachamento Sumô")
@@ -109,25 +99,22 @@ def bot_message(message):
         bot.send_message(chat_id, "Nutrição Inteligente:", reply_markup=m)
 
     elif text == '📷 Analisar Prato (IA)':
-        if not model:
-            bot.send_message(chat_id, "⚠️ Configure a GEMINI_KEY no Render para usar a IA.")
-        else:
-            bot.send_message(chat_id, "🍽️ **Envie uma FOTO da sua comida agora!**\nA Inteligência Artificial vai identificar os alimentos e calcular as calorias aproximadas.")
+        bot.send_message(chat_id, "🍽️ **Envie uma FOTO da sua comida agora!**\nA Inteligência Artificial vai identificar os alimentos.")
 
     elif text == '💧 Meta Água':
         msg = bot.send_message(chat_id, "Qual o seu peso (kg)?")
-        bot.register_next_step_handler(msg, lambda m: bot.reply_to(m, f"💧 Sua meta diária é de **{float(m.text.replace(',','.'))*0.035:.2f} Litros** de água."))
+        bot.register_next_step_handler(msg, lambda m: bot.reply_to(m, f"💧 Meta: **{float(m.text.replace(',','.'))*0.035:.2f} L** de água."))
 
     elif text == '💊 Creatina':
         msg = bot.send_message(chat_id, "Qual o seu peso (kg)?")
-        bot.register_next_step_handler(msg, lambda m: bot.reply_to(m, f"💊 A dose ideal para você é de **{float(m.text.replace(',','.'))*0.07:.1f}g** de creatina por dia."))
+        bot.register_next_step_handler(msg, lambda m: bot.reply_to(m, f"💊 Dose: **{float(m.text.replace(',','.'))*0.07:.1f}g**"))
     
     elif text == '🥩 Proteína':
         msg = bot.send_message(chat_id, "Qual o seu peso (kg)?")
-        bot.register_next_step_handler(msg, lambda m: bot.reply_to(m, f"🥩 Para hipertrofia, consuma em média: **{float(m.text.replace(',','.'))*2.0:.0f}g** de proteína por dia."))
+        bot.register_next_step_handler(msg, lambda m: bot.reply_to(m, f"🥩 Hipertrofia: **{float(m.text.replace(',','.'))*2.0:.0f}g** de proteína/dia."))
 
     elif text == '🍳 Pré-Treino':
-        bot.send_message(chat_id, f"🎲 Sugestão do Chef maromba: **{random.choice(pre_treinos)}**")
+        bot.send_message(chat_id, f"🎲 Sugestão: **{random.choice(pre_treinos)}**")
 
     # === 3. FERRAMENTAS ===
     elif text == '🛠️ FERRAMENTAS':
@@ -140,23 +127,23 @@ def bot_message(message):
         Thread(target=timer_thread, args=(chat_id,)).start()
 
     elif text == '🔥 Tabata':
-        bot.send_message(chat_id, "🔥 **TABATA INICIADO!** Prepare-se: eu aviso os tempos (20s fazendo / 10s descansando).")
+        bot.send_message(chat_id, "🔥 **TABATA INICIADO!** (20s fazendo / 10s descansando).")
         Thread(target=tabata_thread, args=(chat_id,)).start()
 
     elif text == '🧱 Calc. Anilhas':
-        msg = bot.send_message(chat_id, "Qual o peso TOTAL que você quer na barra (kg)?")
+        msg = bot.send_message(chat_id, "Qual o peso TOTAL na barra (kg)?")
         bot.register_next_step_handler(msg, calc_anilhas)
 
     elif text == '💪 Calc. 1RM':
-        msg = bot.send_message(chat_id, "Digite o peso e as repetições que você fez (Ex: 40 10)")
+        msg = bot.send_message(chat_id, "Digite: Peso e Repetições (Ex: 40 10)")
         bot.register_next_step_handler(msg, calc_1rm)
 
     elif text == '📝 Diário':
-        msg = bot.send_message(chat_id, "O que você quer anotar hoje? (Ex: Supino bati 30kg)")
-        bot.register_next_step_handler(msg, lambda m: bot.reply_to(m, "✅ Salvo com sucesso no diário!"))
+        msg = bot.send_message(chat_id, "O que quer anotar? (Ex: Supino 30kg)")
+        bot.register_next_step_handler(msg, lambda m: bot.reply_to(m, "✅ Salvo no diário!"))
 
     elif text == '🆘 Dor vs Lesão':
-        bot.send_message(chat_id, "🏥 **Guia Rápido:**\n- **Dor Muscular (Tardia):** Dói mais no dia seguinte, sensação de repuxar ao alongar. É normal e faz parte do crescimento.\n- **Dor Articular (Lesão):** Pontada aguda, estalos com dor, dói mesmo parado. Se for o caso, PARE o exercício!")
+        bot.send_message(chat_id, "🏥 **Muscular:** Dói no dia seguinte (Normal).\n**Lesão:** Pontada aguda, estalos (PARE!).")
 
     # === 4. EXTRAS ===
     elif text == '🎮 PERFIL & EXTRAS':
@@ -167,53 +154,69 @@ def bot_message(message):
     elif text == '🏆 Meu Nível':
         xp = user_db[uid]['xp']
         patente = next((v for k,v in reversed(niveis.items()) if xp>=k), 'Frango')
-        bot.send_message(chat_id, f"🏅 **SEU STATUS:**\nXP Total: {xp}\n🏷️ Patente Atual: **{patente}**")
+        bot.send_message(chat_id, f"🏅 **XP:** {xp}\n🏷️ **Patente:** {patente}")
 
     elif text == '✅ Check-in':
         user_db[uid]['streak'] += 1
-        bot.send_message(chat_id, f"🔥 **Check-in realizado!**\nSua ofensiva é de 🔥 {user_db[uid]['streak']} dias seguidos. Não quebre a corrente!")
+        bot.send_message(chat_id, f"🔥 **Check-in!** Ofensiva: {user_db[uid]['streak']} dias seguidos.")
 
     elif text == '🔴 MODO MENGÃO':
-        bot.send_message(chat_id, "🔴⚫ **VAMOS FLAMENGO!**\nRaça, amor e paixão! Levanta esse peso como se fosse a final da Libertadores! 💪🦅")
+        bot.send_message(chat_id, "🔴⚫ **VAMOS FLAMENGO!** Raça, amor e paixão! 💪🦅")
 
     elif text == '🎲 Desafio':
-        bot.send_message(chat_id, f"🎲 **DESAFIO RELÂMPAGO:** {random.choice(desafios)}")
+        bot.send_message(chat_id, f"🎲 **DESAFIO:** {random.choice(desafios)}")
 
     elif text == '🎧 DJ Playlist':
-        bot.send_message(chat_id, "🎧 **Spotify Workout:**\n[Playlist Treino Pesado (Rock/Eletrônica)](https://open.spotify.com/playlist/37i9dQZF1DWXRqgorJj26U)")
+        bot.send_message(chat_id, "🎧 **Spotify Workout:**\n[Playlist Treino Pesado](https://open.spotify.com/playlist/37i9dQZF1DWXRqgorJj26U)")
 
     elif text == '🔙 Voltar':
         main_menu(message)
 
 # ==========================================
-# 📸 PROCESSADOR DE FOTO (IA GEMINI)
+# 📸 A MÁGICA DIRETA (API GEMINI SEM BIBLIOTECA)
 # ==========================================
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
-    if not model:
-        bot.reply_to(message, "⚠️ IA não configurada. Adicione a variável GEMINI_KEY no Render.")
+    GEMINI_KEY = os.getenv('GEMINI_KEY')
+    if not GEMINI_KEY:
+        bot.reply_to(message, "⚠️ Chave GEMINI_KEY não encontrada no Render.")
         return
     
-    bot.reply_to(message, "🤖 **Estou analisando o seu prato... Aguarde uns segundinhos.**")
+    bot.reply_to(message, "🤖 **Analisando via Conexão Direta (Anti-Erro)...**")
     try:
-        # Pega a melhor resolução da foto enviada
+        # 1. Baixa a foto do Telegram
         file_info = bot.get_file(message.photo[-1].file_id)
         downloaded_file = bot.download_file(file_info.file_path)
         
-        # Salva a imagem temporariamente
-        temp_img = "food.jpg"
-        with open(temp_img, 'wb') as new_file:
-            new_file.write(downloaded_file)
+        # 2. Converte a foto para Base64 (Formato que a internet entende)
+        img_b64 = base64.b64encode(downloaded_file).decode('utf-8')
         
-        # Prepara a imagem e envia pro Gemini (Pro-Vision usa esse formato)
-        img = Image.open(temp_img)
-        prompt = "Analise esta foto de refeição. Diga os alimentos que você consegue identificar, faça uma estimativa das calorias totais e dos macronutrientes (Proteína, Carboidrato e Gordura). Responda em Português do Brasil de forma direta e amigável."
-        response = model.generate_content([prompt, img])
+        # 3. Monta o pacote de envio direto para o Google
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_KEY}"
+        payload = {
+            "contents": [{
+                "parts": [
+                    {"text": "Analise esta foto de refeição. Diga os alimentos que você consegue identificar, faça uma estimativa das calorias totais e dos macronutrientes (Proteína, Carboidrato e Gordura). Responda em Português de forma amigável."},
+                    {"inline_data": {"mime_type": "image/jpeg", "data": img_b64}}
+                ]
+            }]
+        }
+        headers = {'Content-Type': 'application/json'}
         
-        # Resposta da IA
-        bot.reply_to(message, f"🍽️ **ANÁLISE NUTRICIONAL (IA):**\n\n{response.text}\n\n_(Nota: Esta é uma estimativa por Inteligência Artificial)_", parse_mode="Markdown")
+        # 4. Dispara a requisição (Bypass)
+        response = requests.post(url, json=payload, headers=headers)
+        
+        # 5. Lê a resposta
+        if response.status_code == 200:
+            dados = response.json()
+            texto_ia = dados['candidates'][0]['content']['parts'][0]['text']
+            bot.reply_to(message, f"🍽️ **ANÁLISE NUTRICIONAL:**\n\n{texto_ia}", parse_mode="Markdown")
+        else:
+            bot.reply_to(message, f"❌ Erro do Google: O servidor recusou a análise.")
+            print(response.text) # Mostra o erro real nos logs do Render
+            
     except Exception as e:
-        bot.reply_to(message, f"❌ Erro ao analisar a imagem: {e}")
+        bot.reply_to(message, f"❌ Erro interno: {e}")
 
 # ==========================================
 # 📐 CÁLCULOS
@@ -221,35 +224,31 @@ def handle_photo(message):
 def calc_anilhas(message):
     try:
         total = float(message.text.replace(',', '.'))
-        lado = (total - 20) / 2 # Subtrai os 20kg da barra olímpica
-        if lado <= 0:
-            bot.reply_to(message, "A barra vazia já pesa 20kg!")
-        else:
-            bot.reply_to(message, f"🧱 **Fácil:** Coloque **{lado}kg** de CADA lado da barra.")
-    except: 
-        bot.reply_to(message, "❌ Digite apenas números válidos.")
+        lado = (total - 20) / 2 
+        if lado <= 0: bot.reply_to(message, "A barra já pesa 20kg!")
+        else: bot.reply_to(message, f"🧱 Coloque **{lado}kg** de CADA lado.")
+    except: bot.reply_to(message, "❌ Apenas números.")
 
 def calc_1rm(message):
     try:
         peso, reps = map(float, message.text.replace(',', '.').split())
         rm = peso * (1 + (reps/30))
-        bot.reply_to(message, f"💪 **Força Máxima (1RM):** Você consegue pegar até **{rm:.1f}kg** para uma única repetição.")
-    except: 
-        bot.reply_to(message, "❌ Formato errado. Digite assim: 40 10 (Peso e Número de Repetições).")
+        bot.reply_to(message, f"💪 **1RM:** Você aguenta **{rm:.1f}kg** para 1 rep.")
+    except: bot.reply_to(message, "❌ Digite: 40 10")
 
 # ==========================================
-# ⏱️ TIMERS EM SEGUNDO PLANO
+# ⏱️ TIMERS
 # ==========================================
 def timer_thread(chat_id):
     time.sleep(60)
-    bot.send_message(chat_id, "⏰ **ACABOU O DESCANSO!** Volte para a máquina!")
+    bot.send_message(chat_id, "⏰ **ACABOU O DESCANSO!**")
 
 def tabata_thread(chat_id):
-    bot.send_message(chat_id, "🟢 **GO! Trabalhe no máximo (20s)**")
+    bot.send_message(chat_id, "🟢 **GO! (20s)**")
     time.sleep(20)
-    bot.send_message(chat_id, "🔴 **PAUSA! Respire (10s)**")
+    bot.send_message(chat_id, "🔴 **PAUSA! (10s)**")
     time.sleep(10)
-    bot.send_message(chat_id, "🟢 **GO! Trabalhe no máximo (20s)**")
+    bot.send_message(chat_id, "🟢 **GO! (20s)**")
     time.sleep(20)
     bot.send_message(chat_id, "🏁 **FIM DO CICLO!**")
 
